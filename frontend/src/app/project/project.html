@@ -1,0 +1,114 @@
+<div class="app-container">
+
+  <div class="logo">
+    <div class="logo-icon"></div>
+    <span class="logo-text">GitGuard AI</span>
+  </div>
+
+  <!-- Main Content -->
+  <main class="main-content" *ngIf="selectedProject">
+
+    <!-- Breadcrumb + Title -->
+    <header class="page-header">
+      <div>
+        <h1 class="page-title">{{ selectedProject.name }} Analytics</h1>
+      </div>
+
+      <div class="header-actions">
+        <button class="btn-primary" (click)="goBackToProjects()">
+          ← Back
+        </button>
+
+        <button class="btn-icon-only">
+          <span>🔔</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Summary Cards (3 only) -->
+    <div class="summary-grid">
+
+      <div class="summary-card">
+        <div class="summary-icon">👥</div>
+        <h4>Total Developers</h4>
+        <p class="summary-number">{{ selectedProject.developers }}</p>
+      </div>
+
+      <div class="summary-card">
+        <div class="summary-icon">⬆</div>
+        <h4>Total Pushes</h4>
+        <p class="summary-number">{{ selectedProject.pushesScanned }}</p>
+      </div>
+
+      <div class="summary-card">
+        <div class="summary-icon">⛔</div>
+        <h4>AI-Blocked Events</h4>
+        <p class="summary-number">{{ selectedProject.blockedPushes }}</p>
+      </div>
+
+    </div>
+
+    <!-- Charts Section -->
+    <div class="charts-grid">
+
+      <!-- Bar Chart -->
+      <div class="chart-card">
+        <h3 class="chart-title">Blocks per Developer</h3>
+        <p class="chart-subtitle">Last 30 Days</p>
+
+        <div class="chart-placeholder">
+          <apx-chart [series]="barSeries" [chart]="barChartOptions" [xaxis]="barXAxis"></apx-chart>
+        </div>
+      </div>
+
+      <!-- Pie Chart -->
+      <div class="chart-card">
+        <h3 class="chart-title">Issue Type Distribution</h3>
+        <p class="chart-subtitle">Last 30 Days</p>
+
+        <div class="chart-placeholder">
+          <apx-chart [series]="pieSeries" [chart]="pieChartOptions" [labels]="pieLabels"></apx-chart>
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Recent Activity -->
+    <section class="activity-section">
+      <h3 class="section-title">Recent Activity</h3>
+      <p class="section-subtitle">Showing the last 10 blocked events.</p>
+
+      <div class="activity-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Developer ID</th>
+              <th>Issue</th>
+              <th>Status</th>
+              <th>Timestamp</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngFor="let activity of recentActivity">
+              <td>{{ activity.developer }}</td>
+              <td>{{ activity.issue }}</td>
+              <td>
+                <span class="status-badge" [ngClass]="{
+                        'blocked': activity.issue.includes('Hardcoded'),
+                        'warning': activity.issue.includes('eval')
+                      }">
+                  {{ activity.issue.includes('Hardcoded') ? 'Blocked' : 'Warning' }}
+                </span>
+              </td>
+              <td>{{ activity.time }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+</div>

@@ -1,0 +1,101 @@
+<div class="app-container">
+  
+  <!-- Sidebar -->
+
+    <div class="logo">
+      <div class="logo-icon"></div>
+      <span class="logo-text">GitGuard AI</span>
+    </div>
+  
+
+  <!-- Main Content -->
+  <main class="main-content">
+
+    <header class="page-header">
+      <h1 class="page-title">Projects Overview</h1>
+
+      <div class="header-actions">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input
+            type="text"
+            placeholder="Search projects..."
+            class="search-input"
+            [(ngModel)]="searchQuery"
+            (ngModelChange)="onSearchChange()"
+          />
+        </div>
+
+        <button class="btn-primary" (click)="addNewProject()">
+          <span class="btn-icon">+</span>
+          Add New Project
+        </button>
+
+        <button class="btn-icon-only">
+          <span>🔔</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Projects Table -->
+    <div class="projects-table" *ngIf="viewMode === 'list'">
+      <div class="table-header">
+        <div class="th th-name">PROJECT NAME</div>
+        <div class="th th-developers">DEVELOPERS</div>
+        <div class="th th-pushes">PUSHES SCANNED</div>
+        <div class="th th-blocked">BLOCKED PUSHES</div>
+        <div class="th th-actions"></div>
+      </div>
+
+      <div class="table-body">
+
+        <!-- Corrected ngFor reference -->
+        <div class="table-row" *ngFor="let project of paginatedProjects">
+          <div class="td td-name">{{ project.name }}</div>
+
+          <div class="td td-developers">{{ project.developers }}</div>
+          <div class="td td-pushes">{{ project.pushesScanned }}</div>
+          <div class="td td-blocked">{{ project.blockedPushes }}</div>
+
+          <div class="td td-actions">
+            <button class="link-btn" (click)="viewDetails(project)">
+              View Details
+            </button>
+          </div>
+        </div>
+
+        <div class="table-row" *ngIf="paginatedProjects.length === 0">
+          <div class="td td-name" style="grid-column: 1 / -1; color: #6b7280;">
+            No projects found.
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination">
+      <div class="pagination-info">
+        Showing {{ startIndex + 1 }} to {{ endIndex }} of {{ totalResults }} results
+      </div>
+
+      <div class="pagination-controls">
+        <button class="page-btn" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1">‹</button>
+
+        <button class="page-btn" [class.active]="currentPage === 1" (click)="goToPage(1)">1</button>
+        <button class="page-btn" [class.active]="currentPage === 2" (click)="goToPage(2)">2</button>
+        <button class="page-btn" [class.active]="currentPage === 3" (click)="goToPage(3)">3</button>
+
+        <span class="page-ellipsis">...</span>
+
+        <button class="page-btn" [class.active]="currentPage === 8" (click)="goToPage(8)">8</button>
+        <button class="page-btn" [class.active]="currentPage === 9" (click)="goToPage(9)">9</button>
+        <button class="page-btn" [class.active]="currentPage === 10" (click)="goToPage(10)">10</button>
+
+        <button class="page-btn" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages">›</button>
+      </div>
+    </div>
+
+  </main>
+
+</div>
