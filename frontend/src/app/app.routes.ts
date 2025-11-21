@@ -5,6 +5,4 @@ import { ProjectDetailsComponent } from './project/project';
 export const routes: Routes = [
 {path:"", component:DashBoardComponent},
 { path: 'project-details/:id', component: ProjectDetailsComponent }
-
-
 ];

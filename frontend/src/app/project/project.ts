@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { ProjectService } from '../services/project.service';
 
 import {
   NgApexchartsModule,
@@ -13,7 +14,6 @@ import {
 interface Project {
   id: string;
   name: string;
-  health: 'Healthy' | 'Warning' | 'Critical';
   developers: number;
   pushesScanned: number;
   blockedPushes: number;
@@ -21,10 +21,9 @@ interface Project {
 }
 
 interface Activity {
-  developer: string;
-  issue: string;
-  commit: string;
-  time: string;
+  user_name: string;
+  status: string;
+  timestamp: string;
 }
 
 @Component({
@@ -39,90 +38,101 @@ export class ProjectDetailsComponent implements OnInit {
   projectId: string | null = null;
   selectedProject: Project | null = null;
 
-  /* -------------------------
-     PROJECT LIST (Dummy Data)
-  ------------------------- */
-  projects: Project[] = [
-    { id: '1', name: 'Project Phoenix', health: 'Healthy', developers: 24, pushesScanned: 1204, blockedPushes: 15, lastScanned: '2 hours ago' },
-    { id: '2', name: 'Project Nova', health: 'Warning', developers: 15, pushesScanned: 873, blockedPushes: 88, lastScanned: '5 hours ago' },
-    { id: '3', name: 'Quantum Leap', health: 'Healthy', developers: 31, pushesScanned: 2510, blockedPushes: 21, lastScanned: '1 day ago' },
-    { id: '4', name: 'Project Apollo', health: 'Critical', developers: 8, pushesScanned: 432, blockedPushes: 156, lastScanned: '3 days ago' },
-    { id: '5', name: 'Data Weaver', health: 'Healthy', developers: 19, pushesScanned: 980, blockedPushes: 11, lastScanned: '1 week ago' }
-  ];
-
-  /* -------------------------
-      RECENT ACTIVITY TABLE
-  ------------------------- */
-  recentActivity: Activity[] = [
-    { developer: 'Nandha', issue: 'Hardcoded Secret', commit: 'abc1234', time: '10 mins ago' },
-    { developer: 'Kavin', issue: 'SQL Injection', commit: 'def5678', time: '35 mins ago' },
-    { developer: 'Priya', issue: 'Weak Regex', commit: 'ghi9012', time: '2 hours ago' },
-    { developer: 'Meena', issue: 'Unsafe eval()', commit: 'jkl3456', time: '4 hours ago' }
-  ];
-
-  /* ---------------------------------
-      🔵 BAR CHART (Blocks per Dev)
-  ---------------------------------- */
-
-  barSeries: ApexAxisChartSeries = [
-    {
-      name: "Blocked Issues",
-      data: [10, 25, 5, 16, 8, 12] // dummy — replace with backend later
-    }
-  ];
+  barSeries: ApexAxisChartSeries = [{ name: "Blocked Issues", data: [] }];
+  barXAxis: ApexXAxis = { categories: [] };
 
   barChartOptions: ApexChart = {
-    type: "bar",
-    height: 300,
-    width:800
-  };
+  type: "bar",
+  height: 300,
+  width: 700
+};
 
-  barXAxis: ApexXAxis = {
-    categories: ["Dev A", "Dev B", "Dev C", "Dev D", "Dev E", "Dev F"]
-  };
-
-  /* ---------------------------------
-      🔴 PIE CHART (Issue Distribution)
-  ---------------------------------- */
-
-  pieSeries: ApexNonAxisChartSeries = [40, 30, 15, 10, 5];
-
-  pieLabels: string[] = [
-    "Hardcoded Secrets",
-    "SQL Injection",
-    "Weak Regex",
-    "Unsafe Function",
-    "Other"
-  ];
+  pieSeries: number[] = [];
+  pieLabels: string[] = [];
 
   pieChartOptions: ApexChart = {
-    type: "pie",
-    height: 400,
-    width:400
-  };
+  type: "donut",
+  height:700,
+  width: 550
+};
+
+  recentActivity: Activity[] = [];
 
   constructor(
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private projectService: ProjectService
   ) {}
 
   ngOnInit(): void {
+    const rawId = this.route.snapshot.paramMap.get('id');
+  this.projectId = rawId?decodeURIComponent(rawId) : null;
 
-    this.projectId = this.route.snapshot.paramMap.get('id');
+  console.log("RAW ROUTE ID =", rawId);
+    console.log("DECODED PROJECT ID =", this.projectId);
 
-    if (this.projectId) {
-      this.selectedProject =
-        this.projects.find(p => p.id === this.projectId) ?? null;
-    }
+  if (!this.projectId) {
+    this.router.navigate([""]);
+    return;
+  }
 
-    if (!this.selectedProject) {
+  this.loadProjectDetails(this.projectId);
+}
+
+loadProjectDetails(projectName: string) {
+  this.projectService.getProjectOverview(projectName).subscribe({
+    next: (data) => {
+      this.selectedProject = {
+        id: projectName,
+        name: projectName,
+        developers: data.developers?.developer_count ?? 0,
+        pushesScanned: data.totalPushes?.total_pushes ?? 0,
+        blockedPushes: data.blockedPushes?.blocked_pushes ?? 0,
+        lastScanned: 'Just now'
+      };
+    },
+    error: (err) => {
+      console.error("Error loading project details:", err);
       this.router.navigate([""]);
     }
-  }
+  });
 
-  getHealthClass(health: string): string {
-    return `health-${health.toLowerCase()}`;
-  }
+  this.projectService.getBlocksPerDeveloper(projectName).subscribe({
+      next: (res) => {
+        const rows = res.blocks_per_developer || [];
+        this.barXAxis.categories = rows.map((r: any) => r.user_name);
+        this.barSeries = [{ name: "Blocked Issues", data: rows.map((r: any) => r.blocked_count) }];
+      },
+      error: (err) => {
+        console.warn("Blocks per developer failed:", err);
+        this.barXAxis = { categories: [] };
+        this.barSeries = [{ name: "Blocked Issues", data: [] }];
+      }
+    });
+
+    this.projectService.getStatusPercentage(projectName).subscribe({
+      next: (res) => {
+        const pct = res.status_percentage || {};
+        this.pieLabels = Object.keys(pct);
+        this.pieSeries = Object.values(pct).map(v => Number(v));;
+      },
+      error: (err) => {
+        console.warn("Status percentage failed:", err);
+        this.pieLabels = [];
+        this.pieSeries = [];
+      }
+    });
+
+    this.projectService.getRecentActivities(projectName).subscribe({
+      next: (res) => {
+        this.recentActivity = res.recent_activities || [];
+      },
+      error: (err) => {
+        console.warn("Recent activities failed:", err);
+        this.recentActivity = [];
+      }
+    });
+}
 
   goBackToProjects(): void {
     this.router.navigate([""]);

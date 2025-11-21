@@ -125,7 +125,7 @@
     }
 
     h4 {
-      font-size: 14px;
+      font-size: 24px;
       color: #475569;
     }
 
@@ -226,24 +226,6 @@
         }
       }
     }
-  }
-}
-
-/* STATUS BADGES */
-.status-badge {
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 600;
-
-  &.blocked {
-    background: #fee2e2;
-    color: #b91c1c;
-  }
-
-  &.warning {
-    background: #fef9c3;
-    color: #a16207;
   }
 }
 

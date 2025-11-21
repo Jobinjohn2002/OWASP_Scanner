@@ -11,16 +11,12 @@
     <!-- Breadcrumb + Title -->
     <header class="page-header">
       <div>
-        <h1 class="page-title">{{ selectedProject.name }} Analytics</h1>
+        <h1 class="page-title">{{ selectedProject.name | uppercase}} Analytics</h1>
       </div>
 
       <div class="header-actions">
         <button class="btn-primary" (click)="goBackToProjects()">
           ← Back
-        </button>
-
-        <button class="btn-icon-only">
-          <span>🔔</span>
         </button>
       </div>
     </header>
@@ -68,7 +64,6 @@
 
         <div class="chart-placeholder">
           <apx-chart [series]="pieSeries" [chart]="pieChartOptions" [labels]="pieLabels"></apx-chart>
-
         </div>
       </div>
 
@@ -84,7 +79,6 @@
           <thead>
             <tr>
               <th>Developer ID</th>
-              <th>Issue</th>
               <th>Status</th>
               <th>Timestamp</th>
             </tr>
@@ -92,23 +86,14 @@
 
           <tbody>
             <tr *ngFor="let activity of recentActivity">
-              <td>{{ activity.developer }}</td>
-              <td>{{ activity.issue }}</td>
-              <td>
-                <span class="status-badge" [ngClass]="{
-                        'blocked': activity.issue.includes('Hardcoded'),
-                        'warning': activity.issue.includes('eval')
-                      }">
-                  {{ activity.issue.includes('Hardcoded') ? 'Blocked' : 'Warning' }}
-                </span>
-              </td>
-              <td>{{ activity.time }}</td>
+              <td>{{ activity.user_name }}</td>
+              <td>{{ activity.status }}</td>
+              <td>{{ activity.timestamp }}</td>
             </tr>
           </tbody>
         </table>
       </div>
     </section>
-
   </main>
 
 </div>
