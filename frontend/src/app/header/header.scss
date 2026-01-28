@@ -1,0 +1,56 @@
+// Variables (same as dashboard)
+$primary-color: #3b82f6;
+$primary-hover: #2563eb;
+$secondary-color: #8b5cf6;
+$success-color: #10b981;
+$danger-color: #ef4444;
+$warning-color: #f59e0b;
+
+$bg-primary: #0f172a;
+$bg-secondary: #1e293b;
+$bg-card: #1e293b;
+$bg-hover: #334155;
+
+$text-primary: #f1f5f9;
+$text-secondary: #94a3b8;
+$text-muted: #64748b;
+
+$border-color: #334155;
+$border-radius: 12px;
+$transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px;
+  background: $bg-secondary;
+  border-bottom: 1px solid $border-color;
+
+  .logo-icon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, $primary-color, $secondary-color);
+    border-radius: 10px;
+    position: relative;
+    
+    &::before {
+      content: '🛡️';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 20px;
+    }
+  }
+
+  .logo-text {
+    font-size: 22px;
+    font-weight: 700;
+    background: linear-gradient(135deg, $primary-color, $secondary-color);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}

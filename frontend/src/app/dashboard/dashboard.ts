@@ -5,7 +5,6 @@ import { Router } from '@angular/router';
 import { ProjectService } from '../services/project.service';
 import { map, forkJoin } from 'rxjs';
 
-
 interface Project {
   id: string;
   name: string;
@@ -22,38 +21,39 @@ interface Project {
   standalone: true
 })
 export class DashBoardComponent implements OnInit {
-    constructor(private router: Router, private projectService: ProjectService) {
-      console.log("Dashboard component loaded!");
-    }
-
-    projects: Project[] = [];
-
+  projects: Project[] = [];
   viewMode: 'list' = 'list';
   searchQuery = '';
-
   currentPage = 1;
-  resultsPerPage = 5;
+  resultsPerPage = 10; // Changed from 5 to 10
+  
+  // Loading state
+  isLoading = true;
+  loadingError: string | null = null;
+
+  constructor(private router: Router, private projectService: ProjectService) {
+    console.log("Dashboard component loaded!");
+  }
 
   ngOnInit(): void {
     this.loadProjects();
   }
 
   loadProjects() {
-  console.log("Loading projects...");
+    console.log("Loading projects...");
+    this.isLoading = true;
+    this.loadingError = null;
 
-  this.projectService.getProjects().subscribe({
-    next: (projectNames: string[]) => {
-      console.log("Projects received from backend:", projectNames);
+    this.projectService.getProjects().subscribe({
+      next: (projectNames: string[]) => {
+        console.log("Projects received from backend:", projectNames);
 
-      if (!projectNames || projectNames.length === 0) {
-        console.warn("Backend returned EMPTY project list.");
-        return;
-      }
-
-      if (!projectNames || projectNames.length === 0) {
+        if (!projectNames || projectNames.length === 0) {
           console.warn("Backend returned EMPTY project list.");
+          this.isLoading = false;
           return;
         }
+
         const calls = projectNames.map((name: string) =>
           this.projectService.getProjectOverview(name).pipe(
             map(data => ({
@@ -66,20 +66,26 @@ export class DashBoardComponent implements OnInit {
           )
         );
 
-      forkJoin(calls).subscribe({
-        next: (finalProjects: Project[]) => {
-          console.log("FINAL PROJECT LIST:", finalProjects);
-          this.projects = finalProjects;
-        },
-        error: (err) => {
-          console.error("ERROR INSIDE forkJoin:", err);
-        }
-      });
-    },
-    error: (err) => console.error("ERROR GETTING PROJECT NAMES:", err)
-  });
-}
-
+        forkJoin(calls).subscribe({
+          next: (finalProjects: Project[]) => {
+            console.log("FINAL PROJECT LIST:", finalProjects);
+            this.projects = finalProjects;
+            this.isLoading = false;
+          },
+          error: (err) => {
+            console.error("ERROR INSIDE forkJoin:", err);
+            this.loadingError = "Failed to load project details";
+            this.isLoading = false;
+          }
+        });
+      },
+      error: (err) => {
+        console.error("ERROR GETTING PROJECT NAMES:", err);
+        this.loadingError = "Failed to load projects";
+        this.isLoading = false;
+      }
+    });
+  }
 
   get filteredProjects(): Project[] {
     if (!this.searchQuery.trim()) {
@@ -99,14 +105,12 @@ export class DashBoardComponent implements OnInit {
     return Math.max(1, Math.ceil(this.totalResults / this.resultsPerPage));
   }
 
-  // Current page slice
   get paginatedProjects(): Project[] {
     const start = (this.currentPage - 1) * this.resultsPerPage;
     const end = start + this.resultsPerPage;
     return this.filteredProjects.slice(start, end);
   }
 
-  // For displaying "Showing X to Y of Z"
   get startIndex(): number {
     if (this.totalResults === 0) {
       return 0;
@@ -121,19 +125,22 @@ export class DashBoardComponent implements OnInit {
     return Math.min(this.startIndex + this.resultsPerPage, this.totalResults);
   }
 
+  // Create skeleton array for loading state
+  get skeletonRows(): number[] {
+    return Array(this.resultsPerPage).fill(0);
+  }
+
   setViewMode(mode: 'list'): void {
     this.viewMode = mode;
   }
 
   onSearchChange(): void {
-    // Whenever search changes, reset to first page
     this.currentPage = 1;
   }
 
-viewDetails(project: Project) {
-  this.router.navigate(['project-details', project.id]);
-}
-
+  viewDetails(project: Project) {
+    this.router.navigate(['project-details', project.id]);
+  }
 
   addNewProject(): void {
     console.log('Add new project');
@@ -144,5 +151,4 @@ viewDetails(project: Project) {
       this.currentPage = page;
     }
   }
-
 }

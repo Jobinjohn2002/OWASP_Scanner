@@ -2,12 +2,6 @@
   
   <!-- Sidebar -->
 
-    <div class="logo">
-      <div class="logo-icon"></div>
-      <span class="logo-text">GitGuard AI</span>
-    </div>
-  
-
   <!-- Main Content -->
   <main class="main-content">
 
@@ -16,7 +10,7 @@
 
       <div class="header-actions">
         <div class="search-box">
-          <span class="search-icon">🔍</span>
+          <!-- <span class="search-icon">🔍</span> -->
           <input
             type="text"
             placeholder="Search projects..."
@@ -26,15 +20,15 @@
           />
         </div>
 
-        <button class="btn-primary" (click)="addNewProject()">
+        <!-- <button class="btn-primary" (click)="addNewProject()">
           <span class="btn-icon">+</span>
           Add New Project
-        </button>
+        </button> -->
       </div>
     </header>
 
-    <!-- Projects Table -->
-    <div class="projects-table" *ngIf="viewMode === 'list'">
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="projects-table">
       <div class="table-header">
         <div class="th th-name">PROJECT NAME</div>
         <div class="th th-developers">DEVELOPERS</div>
@@ -44,15 +38,42 @@
       </div>
 
       <div class="table-body">
+        <div class="table-row" *ngFor="let _ of skeletonRows">
+          <div class="td td-name"><div class="skeleton skeleton-text"></div></div>
+          <div class="td td-developers"><div class="skeleton skeleton-text"></div></div>
+          <div class="td td-pushes"><div class="skeleton skeleton-text"></div></div>
+          <div class="td td-blocked"><div class="skeleton skeleton-text"></div></div>
+          <div class="td td-actions"><div class="skeleton skeleton-text"></div></div>
+        </div>
+      </div>
+    </div>
 
-        <!-- Corrected ngFor reference -->
+    <!-- Error State -->
+    <div *ngIf="!isLoading && loadingError" class="empty-state">
+      <div class="empty-icon">⚠️</div>
+      <div class="empty-title">Failed to Load Projects</div>
+      <div class="empty-message">{{ loadingError }}</div>
+      <button class="btn-primary" (click)="loadProjects()" style="margin-top: 20px;">
+        Retry
+      </button>
+    </div>
+
+    <!-- Projects Table -->
+    <div class="projects-table" *ngIf="!isLoading && !loadingError && viewMode === 'list'">
+      <div class="table-header">
+        <div class="th th-name">PROJECT NAME</div>
+        <div class="th th-developers">DEVELOPERS</div>
+        <div class="th th-pushes">PUSHES SCANNED</div>
+        <div class="th th-blocked">BLOCKED PUSHES</div>
+        <div class="th th-actions"></div>
+      </div>
+
+      <div class="table-body">
         <div class="table-row" *ngFor="let project of paginatedProjects">
           <div class="td td-name">{{ project.name }}</div>
-
           <div class="td td-developers">{{ project.developers }}</div>
           <div class="td td-pushes">{{ project.pushesScanned }}</div>
           <div class="td td-blocked">{{ project.blockedPushes }}</div>
-
           <div class="td td-actions">
             <button class="link-btn" (click)="viewDetails(project)">
               View Details
@@ -60,17 +81,18 @@
           </div>
         </div>
 
-        <div class="table-row" *ngIf="paginatedProjects.length === 0">
-          <div class="td td-name" style="grid-column: 1 / -1; color: #6b7280;">
-            No projects found.
+        <div *ngIf="paginatedProjects.length === 0" class="empty-state">
+          <div class="empty-icon">🔍</div>
+          <div class="empty-title">No Projects Found</div>
+          <div class="empty-message">
+            Try adjusting your search or add a new project.
           </div>
         </div>
-
       </div>
     </div>
 
     <!-- Pagination -->
-    <div class="pagination">
+    <div class="pagination" *ngIf="!isLoading && !loadingError && totalResults > 0">
       <div class="pagination-info">
         Showing {{ startIndex + 1 }} to {{ endIndex }} of {{ totalResults }} results
       </div>
@@ -79,14 +101,14 @@
         <button class="page-btn" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1">‹</button>
 
         <button class="page-btn" [class.active]="currentPage === 1" (click)="goToPage(1)">1</button>
-        <button class="page-btn" [class.active]="currentPage === 2" (click)="goToPage(2)">2</button>
-        <button class="page-btn" [class.active]="currentPage === 3" (click)="goToPage(3)">3</button>
+        <button class="page-btn" *ngIf="totalPages > 1" [class.active]="currentPage === 2" (click)="goToPage(2)">2</button>
+        <button class="page-btn" *ngIf="totalPages > 2" [class.active]="currentPage === 3" (click)="goToPage(3)">3</button>
 
-        <span class="page-ellipsis">...</span>
+        <span class="page-ellipsis" *ngIf="totalPages > 10">...</span>
 
-        <button class="page-btn" [class.active]="currentPage === 8" (click)="goToPage(8)">8</button>
-        <button class="page-btn" [class.active]="currentPage === 9" (click)="goToPage(9)">9</button>
-        <button class="page-btn" [class.active]="currentPage === 10" (click)="goToPage(10)">10</button>
+        <button class="page-btn" *ngIf="totalPages > 7" [class.active]="currentPage === totalPages - 2" (click)="goToPage(totalPages - 2)">{{ totalPages - 2 }}</button>
+        <button class="page-btn" *ngIf="totalPages > 8" [class.active]="currentPage === totalPages - 1" (click)="goToPage(totalPages - 1)">{{ totalPages - 1 }}</button>
+        <button class="page-btn" *ngIf="totalPages > 9" [class.active]="currentPage === totalPages" (click)="goToPage(totalPages)">{{ totalPages }}</button>
 
         <button class="page-btn" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages">›</button>
       </div>
